@@ -5,6 +5,9 @@ import sqlite3
 from subprocess import call
 from bs4 import BeautifulSoup
 from pathlib import Path
+import xml.etree.ElementTree as ET
+import datetime
+import html
 
 name = "Linuxcnc_GCode"
 root = Path(f"{name}.docset")
@@ -30,6 +33,8 @@ def create_info_plist():
     <string>{name}</string>
     <key>isDashDocset</key>
     <true/>
+    <key>dashIndexFilePath</key>
+    <string>index.html</string>
 </dict>
 </plist>
 """
@@ -99,6 +104,14 @@ def copy_to_local():
     shutil.copytree(root, final_destination)
     print(f"Docset '{root}' copied to '{final_destination}'.")    
 
+def create_local_feed():
+    call(["tar", "--exclude='.DS_Store'", "-cvzf", f"{name}.tgz", f"{name}.docset"])
+    root = ET.Element("entry")
+    ET.SubElement(root, "version").text = f"0.0.0-{datetime.datetime.now().isoformat()}"
+    ET.SubElement(root, "url").text = f"file://{os.getcwd()}/{name}.tgz"
+    tree = ET.ElementTree(root)
+    tree.write("feed.xml")
+
 def create_meta_json():
     meta=dict()
     meta["name"] = name
@@ -110,7 +123,57 @@ def create_meta_json():
     print(f"{meta_path} has {meta}")
     with open(meta_path, 'w') as meta_file:
         meta_file.write(json.dumps(meta))
-    
+
+def create_index():
+    sections = [
+        ("Overview", doc_folder / "overview.html"),
+        ("G-code", doc_folder / "g-code.html"),
+        ("M-code", doc_folder / "m-code.html"),
+        ("O-code", doc_folder / "o-code.html"),
+        ("Other", doc_folder / "other-code.html"),
+    ]
+
+    section_entries = []
+    for title, html_file in sections:
+        entries = list(parse(html_file)) if html_file.exists() else []
+        section_entries.append((title, html_file.name, entries))
+
+    sections_html = []
+    for title, filename, entries in section_entries:
+        count = len(entries)
+        section_html = []
+        section_html.append('    <div class="section">')
+        section_html.append(f'      <details {"open" if count else ""}>')
+        section_html.append(f'        <summary>{html.escape(title)} ({count})</summary>')
+        if count:
+            section_html.append("        <ul>")
+            for name, path in entries:
+                section_html.append(
+                    f'          <li><a href="{html.escape(path)}">{html.escape(name)}</a></li>'
+                )
+            section_html.append("        </ul>")
+        else:
+            section_html.append(
+                f'        <p><a href="{html.escape(filename)}">Open {html.escape(title)} page</a></p>'
+            )
+        section_html.append("      </details>")
+        section_html.append("    </div>")
+        sections_html.append("\n".join(section_html))
+
+    template_path = Path(__file__).parent / "index.template.html"
+    with open(template_path, "r") as template_file:
+        template = template_file.read()
+
+    index_content = template.replace("{{sections}}", "\n".join(sections_html))
+    index_content = index_content.replace("{{title}}", "LinuxCNC G-code Reference")
+    index_content = index_content.replace(
+        "{{subtitle}}",
+        "Quick navigation for G/M/O commands and guide material from the LinuxCNC docs.",
+    )
+
+    index_path = doc_folder / "index.html"
+    with open(index_path, "w") as index_file:
+        index_file.write(index_content)
     
 def main():
     create_directories()
@@ -124,10 +187,10 @@ def main():
     # Generate HTML from AsciiDoc files
     generate_html_from_adoc()
 
+    create_index()
     add_db_entries()
 
-    copy_to_local()
-
+    create_local_feed()
 
 if __name__ == "__main__":
     main()

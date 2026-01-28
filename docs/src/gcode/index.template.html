@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+    body {
+      font-family: "Georgia", "Times New Roman", serif;
+      line-height: 1.5;
+      margin: 0;
+      background: #f3f1eb;
+      color: #1c1c1c;
+    }
+    header {
+      background: #2b3a42;
+      color: #f7f3e7;
+      padding: 2rem 2.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 2.2rem;
+    }
+    header p {
+      margin: 0;
+      max-width: 48rem;
+    }
+    main {
+      padding: 2rem 2.5rem 3rem 2.5rem;
+      max-width: 70rem;
+    }
+    .section {
+      margin-bottom: 1.5rem;
+      border: 1px solid #d9d4c7;
+      border-radius: 10px;
+      background: #fffaf0;
+      padding: 0.75rem 1rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+    details > summary {
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1.1rem;
+      list-style: none;
+    }
+    details > summary::-webkit-details-marker {
+      display: none;
+    }
+    details > summary:before {
+      content: "▶ ";
+      display: inline-block;
+      margin-right: 0.25rem;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary:before {
+      transform: rotate(90deg);
+    }
+    ul {
+      columns: 2;
+      column-gap: 2rem;
+      margin: 0.75rem 0 0 0;
+      padding-left: 1rem;
+    }
+    li {
+      break-inside: avoid-column;
+      margin-bottom: 0.35rem;
+    }
+    a {
+      color: #1d4a61;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 800px) {
+      header, main {
+        padding: 1.5rem;
+      }
+      ul {
+        columns: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{title}}</h1>
+    <p>{{subtitle}}</p>
+  </header>
+  <main>
+{{sections}}
+  </main>
+</body>
+</html>
